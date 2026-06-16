@@ -1,4 +1,44 @@
+from tabulate import tabulate
+
 ocorrencias = []
+atendimentos = []
+historico_ocorrencias = []
+historico_atendimentos = []
+
+def gerencia_historico_acoes():
+    while True:
+        print("\n===== HISTÓRICO =====")
+        print("1 - Listar ocorrências")
+        print("2 - Listar atendimentos")
+        print("3 - Desfazer última ocorrência")
+        print("4 - Desfazer último atendimento")
+        print("0 - Sair")
+
+        opcao = input("Escolha uma opção: ")
+
+        if opcao == "1":
+            listar_ocorrencias()
+        elif opcao == "2":
+            listar_atendimentos()
+        elif opcao == "3":
+            desfazer_ultima_acao(historico_ocorrencias)
+        elif opcao == "4":
+            desfazer_ultima_acao(historico_atendimentos)    
+        elif opcao == "0":
+            print("Saindo...")
+            break
+        else:
+            print("Opção inválida.")
+
+def desfazer_ultima_acao(pilha):
+    if pilha:
+        resultado = pilha.pop()
+        print(tabulate(ocorrencias, headers="keys", tablefmt="grid"))
+        print(f"Ocorrência apagada:\n {tabulate([resultado], headers="keys", tablefmt="grid")}")
+    else:
+        print("Histórico vazio")
+        return
+
 
 def gerar_id(nome):
     soma = 0
@@ -28,25 +68,28 @@ def cadastrar_ocorrencia():
     print("Tipo:", tipo)
     print("Descrição:", descricao)
     print("Prioridade:", prioridade)
-
-    ocorrencias.append({
+    ocorrencia = {
         'id_ocorrencia': id_ocorrencia,
         'nome': nome,
         'tipo': tipo,
         'descricao': descricao,
         'prioridade': prioridade
-    })
+    }
+    ocorrencias.append(ocorrencia)
+    historico_ocorrencias.append(ocorrencia)
 
     print("Ocorrência salva com sucesso.")
 
 
-def listar_ocorrencias():
-        
+def listar_atendimentos():
+    print("\nLISTAR ATENDIMENTOS")
+    print("Aqui serão listados os atendimentos.")
+    print(tabulate(atendimentos, headers="keys", tablefmt="grid"))
+
+def listar_ocorrencias():  
     print("\nLISTAR OCORRÊNCIAS")
     print("Aqui serão listadas as ocorrências cadastradas.")
-    for x in ocorrencias:
-        print(x)
-
+    print(tabulate(ocorrencias, headers="keys", tablefmt="grid"))
 
 def buscar_ocorrencia():
     print("\nBUSCAR OCORRÊNCIA")
@@ -59,6 +102,7 @@ while True:
     print("1 - Cadastrar ocorrência")
     print("2 - Listar ocorrências")
     print("3 - Buscar ocorrência")
+    print("8 - Ver histórico de ações")
     print("0 - Sair")
 
     opcao = input("Escolha uma opção: ")
@@ -69,6 +113,8 @@ while True:
         listar_ocorrencias()
     elif opcao == "3":
         buscar_ocorrencia()
+    elif opcao == "8":
+        gerencia_historico_acoes()
     elif opcao == "0":
         print("Saindo...")
         break
