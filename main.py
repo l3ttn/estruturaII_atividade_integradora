@@ -120,12 +120,35 @@ def buscar_ocorrencia():
     id_busca = input("Digite o ID para buscar: ")
     print("Buscando ocorrência com ID:", id_busca)
 
+def busca_nome_tipo():
+    print("\nBUSCAR POR NOME OU TIPO")
+    print("1 - Buscar por nome")
+    print("2 - Buscar por tipo")
+    opcao = input("Escolha: ")
+
+    if opcao == "1":
+        nome = input("Digite o nome: ")
+        resultados = buscar_hash(hash_nome, nome)
+    elif opcao == "2":
+        tipo = input("Digite o tipo: ")
+        resultados = buscar_hash(hash_tipo, tipo)
+    else:
+        print("Opção inválida.")
+        return
+
+    if resultados:
+        print("\nOcorrências encontradas:")
+        print(tabulate(resultados, headers="keys", tablefmt="grid"))
+    else:
+        print("Nenhuma ocorrência encontrada.")
+
 
 while True:
     print("\n===== MENU =====")
     print("1 - Cadastrar ocorrência")
     print("2 - Listar ocorrências")
     print("3 - Buscar ocorrência")
+    print("6 - Buscar por nome ou tipo")
     print("8 - Ver histórico de ações")
     print("0 - Sair")
 
@@ -137,6 +160,8 @@ while True:
         listar_ocorrencias()
     elif opcao == "3":
         buscar_ocorrencia()
+    elif opcao == "6":
+        busca_nome_tipo()
     elif opcao == "8":
         gerencia_historico_acoes()
     elif opcao == "0":
