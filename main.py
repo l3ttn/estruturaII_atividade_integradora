@@ -1,3 +1,5 @@
+ocorrencias = []
+
 def gerar_id(nome):
     soma = 0
 
@@ -27,10 +29,23 @@ def cadastrar_ocorrencia():
     print("Descrição:", descricao)
     print("Prioridade:", prioridade)
 
+    ocorrencias.append({
+        'id_ocorrencia': id_ocorrencia,
+        'nome': nome,
+        'tipo': tipo,
+        'descricao': descricao,
+        'prioridade': prioridade
+    })
+
+    print("Ocorrência salva com sucesso.")
+
 
 def listar_ocorrencias():
+        
     print("\nLISTAR OCORRÊNCIAS")
     print("Aqui serão listadas as ocorrências cadastradas.")
+    for x in ocorrencias:
+        print(x)
 
 
 def buscar_ocorrencia():
