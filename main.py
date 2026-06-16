@@ -25,7 +25,7 @@ def gerencia_historico_acoes():
         elif opcao == "4":
             desfazer_ultima_acao(historico_atendimentos)    
         elif opcao == "0":
-            print("Saindo...")
+            print("Saindooooo...")
             break
         else:
             print("Opção inválida.")
