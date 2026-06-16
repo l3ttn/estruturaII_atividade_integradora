@@ -1,5 +1,26 @@
 ocorrencias = []
 
+hash_nome = []
+hash_tipo = []
+
+for i in range(10):
+    hash_nome.append([])
+    hash_tipo.append([])
+
+def djb2(chave_str, tamanho):
+    hash_val = 5381
+    for char in chave_str:
+        hash_val = ((hash_val << 5) + hash_val) + ord(char)
+    return hash_val % tamanho
+
+def inserir_hash(tabela, chave, ocorrencia):
+    posicao = djb2(chave, 10)
+    tabela[posicao].append(ocorrencia)
+
+def buscar_hash(tabela, chave):
+    posicao = djb2(chave, 10)
+    return tabela[posicao]
+
 def gerar_id(nome):
     soma = 0
 
@@ -36,6 +57,9 @@ def cadastrar_ocorrencia():
         'descricao': descricao,
         'prioridade': prioridade
     })
+
+    inserir_hash(hash_nome, nome, ocorrencias[-1])
+    inserir_hash(hash_tipo, tipo, ocorrencias[-1])
 
     print("Ocorrência salva com sucesso.")
 
