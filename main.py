@@ -242,6 +242,34 @@ def busca_nome_tipo():
     else:
         print("Nenhuma ocorrência encontrada.")
 
+def ordena_ocorrencias():
+    print("\nOrdenar Por:")
+    print("1 - ID")
+    print("2 - Prioridade")
+    print("3 - Nome")
+    print("0 - Voltar")
+    opcao = input("Escolha uma opção: ")
+    busca = ''
+    if opcao == "1":
+        busca = 'id_ocorrencia'
+    elif opcao == "2":
+        busca = 'prioridade'
+    elif opcao == "3":
+        busca = 'nome'
+    elif opcao == "0":
+        return
+
+    n = len(ocorrencias)
+    if busca == 'prioridade':
+        for i in range(n):
+            for j in range(0, n-i-1):
+                if ocorrencias[j][busca] < ocorrencias[j+1][busca]:
+                    ocorrencias[j][busca], ocorrencias[j+1][busca] = ocorrencias[j+1][busca], ocorrencias[j][busca]
+    else:
+        for i in range(n):
+            for j in range(0, n-i-1):
+                if ocorrencias[j][busca] > ocorrencias[j+1][busca]:
+                    ocorrencias[j][busca], ocorrencias[j+1][busca] = ocorrencias[j+1][busca], ocorrencias[j][busca]
 
 while True:
     print("\n===== MENU =====")
@@ -251,6 +279,7 @@ while True:
     print("4 - Atender por prioridade")
     print("5 - Buscar ocorrência por ID")
     print("6 - Buscar por nome ou tipo")
+    print("7 - Ordenar ocorrências")
     print("8 - Ver histórico de ações")
     print("0 - Sair")
 
@@ -268,6 +297,8 @@ while True:
         buscar_ocorrencia()
     elif opcao == "6":
         busca_nome_tipo()
+    elif opcao == "7":
+        ordena_ocorrencias()
     elif opcao == "8":
         gerencia_historico_acoes()
     elif opcao == "0":
