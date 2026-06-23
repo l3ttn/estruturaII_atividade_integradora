@@ -61,6 +61,47 @@ def buscar_hash(tabela, chave):
     posicao = djb2(chave, 10)
     return tabela[posicao]
 
+heap = []
+
+def subir(i):
+    pai = (i - 1) // 2
+    while i > 0 and int(heap[i]['prioridade']) > int(heap[pai]['prioridade']):
+        heap[i], heap[pai] = heap[pai], heap[i]
+        i = pai
+        pai = (i - 1) // 2
+
+def descer(i):
+    tamanho = len(heap)
+    while True:
+        maior = i
+        esq = 2 * i + 1
+        dir = 2 * i + 2
+
+        if esq < tamanho and int(heap[esq]['prioridade']) > int(heap[maior]['prioridade']):
+            maior = esq
+        if dir < tamanho and int(heap[dir]['prioridade']) > int(heap[maior]['prioridade']):
+            maior = dir
+
+        if maior != i:
+            heap[i], heap[maior] = heap[maior], heap[i]
+            i = maior
+        else:
+            break
+
+def inserir_heap(ocorrencia):
+    heap.append(ocorrencia)
+    subir(len(heap) - 1)
+
+def extrair_max():
+    if len(heap) == 0:
+        return None
+    maximo = heap[0]
+    heap[0] = heap[len(heap) - 1]
+    heap.pop()
+    if len(heap) > 0:
+        descer(0)
+    return maximo
+
 def gerar_id(nome):
     soma = 0
 
@@ -101,6 +142,7 @@ def cadastrar_ocorrencia():
 
     inserir_hash(hash_nome, nome, ocorrencias[-1])
     inserir_hash(hash_tipo, tipo, ocorrencias[-1])
+    inserir_heap(ocorrencia)
 
     print("Ocorrência salva com sucesso.")
 
@@ -142,12 +184,23 @@ def busca_nome_tipo():
     else:
         print("Nenhuma ocorrência encontrada.")
 
+def atender_prioridade():
+    resultado = extrair_max()
+    if resultado is None:
+        print("\nNenhuma ocorrência para atender.")
+        return
+    print("\nAtendendo ocorrência crítica:")
+    print("ID:", resultado['id_ocorrencia'], "|", resultado['nome'], "|", resultado['tipo'], "| Prioridade:", resultado['prioridade'])
+    atendimentos.append(resultado)
+    historico_atendimentos.append(resultado)
+
 
 while True:
     print("\n===== MENU =====")
     print("1 - Cadastrar ocorrência")
     print("2 - Listar ocorrências")
     print("3 - Buscar ocorrência")
+    print("4 - Atender por prioridade")
     print("6 - Buscar por nome ou tipo")
     print("8 - Ver histórico de ações")
     print("0 - Sair")
@@ -160,6 +213,8 @@ while True:
         listar_ocorrencias()
     elif opcao == "3":
         buscar_ocorrencia()
+    elif opcao == "4":
+        atender_prioridade()
     elif opcao == "6":
         busca_nome_tipo()
     elif opcao == "8":
