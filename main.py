@@ -1,13 +1,14 @@
 from tabulate import tabulate
+from collections import deque
 
-ocorrencias = []
+ocorrencias = deque()
 atendimentos = []
 historico_ocorrencias = []
 historico_atendimentos = []
 
 def gerencia_historico_acoes():
     while True:
-        print("\n===== HISTÓRICO =====")
+        print("\n===== HISTÓRICO DE AÇÕES =====")
         print("1 - Listar ocorrências")
         print("2 - Listar atendimentos")
         print("3 - Desfazer última ocorrência")
@@ -17,9 +18,9 @@ def gerencia_historico_acoes():
         opcao = input("Escolha uma opção: ")
 
         if opcao == "1":
-            listar_ocorrencias()
+            listar_historico_ocorrencias()
         elif opcao == "2":
-            listar_atendimentos()
+            listar_historico_atendimentos()
         elif opcao == "3":
             desfazer_ultima_acao(historico_ocorrencias)
         elif opcao == "4":
@@ -29,6 +30,11 @@ def gerencia_historico_acoes():
             break
         else:
             print("Opção inválida.")
+
+def atender_ocorrencia_fila():
+    resultado = ocorrencias.popleft()
+    historico_atendimentos.append(resultado)
+    print(resultado)
 
 def desfazer_ultima_acao(pilha):
     if pilha:
@@ -115,6 +121,14 @@ def listar_ocorrencias():
     print("Aqui serão listadas as ocorrências cadastradas.")
     print(tabulate(ocorrencias, headers="keys", tablefmt="grid"))
 
+def listar_historico_ocorrencias():  
+    print("\nHISTÓRICO OCORRÊNCIAS")
+    print(tabulate(historico_ocorrencias, headers="keys", tablefmt="grid"))
+
+def listar_historico_atendimentos():
+    print("\nHISTÓRICO ATENDIMENTOS")
+    print(tabulate(historico_atendimentos, headers="keys", tablefmt="grid"))
+
 def buscar_ocorrencia():
     print("\nBUSCAR OCORRÊNCIA")
     id_busca = input("Digite o ID para buscar: ")
@@ -147,7 +161,8 @@ while True:
     print("\n===== MENU =====")
     print("1 - Cadastrar ocorrência")
     print("2 - Listar ocorrências")
-    print("3 - Buscar ocorrência")
+    print("3 - Atender próxima ocorrência pela fila")
+    print("5 - Buscar ocorrência")
     print("6 - Buscar por nome ou tipo")
     print("8 - Ver histórico de ações")
     print("0 - Sair")
@@ -159,6 +174,8 @@ while True:
     elif opcao == "2":
         listar_ocorrencias()
     elif opcao == "3":
+        atender_ocorrencia_fila()
+    elif opcao == "5":
         buscar_ocorrencia()
     elif opcao == "6":
         busca_nome_tipo()
