@@ -55,11 +55,15 @@ def djb2(chave_str, tamanho):
 
 def inserir_hash(tabela, chave, ocorrencia):
     posicao = djb2(chave, 10)
-    tabela[posicao].append(ocorrencia)
+    tabela[posicao].append((chave, ocorrencia))
 
 def buscar_hash(tabela, chave):
     posicao = djb2(chave, 10)
-    return tabela[posicao]
+    resultados = []
+    for chave_salva, oc in tabela[posicao]:
+        if chave_salva == chave:
+            resultados.append(oc)
+    return resultados
 
 heap = []
 
@@ -101,6 +105,30 @@ def extrair_max():
     if len(heap) > 0:
         descer(0)
     return maximo
+
+raiz = None
+
+def criar_no(chave, dado):
+    return {'chave': chave, 'dado': dado, 'esq': None, 'drt': None}
+
+def inserir_arvore(no, chave, dado):
+    if no is None:
+        return criar_no(chave, dado)
+    if chave < no['chave']:
+        no['esq'] = inserir_arvore(no['esq'], chave, dado)
+    elif chave > no['chave']:
+        no['drt'] = inserir_arvore(no['drt'], chave, dado)
+    return no
+
+def buscar_arvore(no, chave):
+    if no is None:
+        return None
+    if chave == no['chave']:
+        return no['dado']
+    elif chave < no['chave']:
+        return buscar_arvore(no['esq'], chave)
+    else:
+        return buscar_arvore(no['drt'], chave)
 
 def gerar_id(nome):
     soma = 0
@@ -144,6 +172,9 @@ def cadastrar_ocorrencia():
     inserir_hash(hash_tipo, tipo, ocorrencias[-1])
     inserir_heap(ocorrencia)
 
+    global raiz
+    raiz = inserir_arvore(raiz, id_ocorrencia, ocorrencia)
+
     print("Ocorrência salva com sucesso.")
 
 
@@ -158,9 +189,14 @@ def listar_ocorrencias():
     print(tabulate(ocorrencias, headers="keys", tablefmt="grid"))
 
 def buscar_ocorrencia():
-    print("\nBUSCAR OCORRÊNCIA")
-    id_busca = input("Digite o ID para buscar: ")
-    print("Buscando ocorrência com ID:", id_busca)
+    print("\nBUSCAR OCORRÊNCIA POR ID")
+    id_busca = input("Digite o ID para buscar: ").strip().upper()
+    resultado = buscar_arvore(raiz, id_busca)
+    if resultado:
+        print("\nOcorrência encontrada:")
+        print(tabulate([resultado], headers="keys", tablefmt="grid"))
+    else:
+        print("Ocorrência não encontrada.")
 
 def busca_nome_tipo():
     print("\nBUSCAR POR NOME OU TIPO")
