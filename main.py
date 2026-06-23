@@ -61,11 +61,78 @@ def djb2(chave_str, tamanho):
 
 def inserir_hash(tabela, chave, ocorrencia):
     posicao = djb2(chave, 10)
-    tabela[posicao].append(ocorrencia)
+    tabela[posicao].append((chave, ocorrencia))
 
 def buscar_hash(tabela, chave):
     posicao = djb2(chave, 10)
-    return tabela[posicao]
+    resultados = []
+    for chave_salva, oc in tabela[posicao]:
+        if chave_salva == chave:
+            resultados.append(oc)
+    return resultados
+
+heap = []
+
+def subir(i):
+    pai = (i - 1) // 2
+    while i > 0 and int(heap[i]['prioridade']) > int(heap[pai]['prioridade']):
+        heap[i], heap[pai] = heap[pai], heap[i]
+        i = pai
+        pai = (i - 1) // 2
+
+def descer(i):
+    tamanho = len(heap)
+    while True:
+        maior = i
+        esq = 2 * i + 1
+        drt = 2 * i + 2
+        if esq < tamanho and int(heap[esq]['prioridade']) > int(heap[maior]['prioridade']):
+            maior = esq
+        if drt < tamanho and int(heap[drt]['prioridade']) > int(heap[maior]['prioridade']):
+            maior = drt
+        if maior != i:
+            heap[i], heap[maior] = heap[maior], heap[i]
+            i = maior
+        else:
+            break
+
+def inserir_heap(ocorrencia):
+    heap.append(ocorrencia)
+    subir(len(heap) - 1)
+
+def extrair_max():
+    if len(heap) == 0:
+        return None
+    maximo = heap[0]
+    heap[0] = heap[len(heap) - 1]
+    heap.pop()
+    if len(heap) > 0:
+        descer(0)
+    return maximo
+
+raiz = None
+
+def criar_no(chave, dado):
+    return {'chave': chave, 'dado': dado, 'esq': None, 'drt': None}
+
+def inserir_arvore(no, chave, dado):
+    if no is None:
+        return criar_no(chave, dado)
+    if chave < no['chave']:
+        no['esq'] = inserir_arvore(no['esq'], chave, dado)
+    elif chave > no['chave']:
+        no['drt'] = inserir_arvore(no['drt'], chave, dado)
+    return no
+
+def buscar_arvore(no, chave):
+    if no is None:
+        return None
+    if chave == no['chave']:
+        return no['dado']
+    elif chave < no['chave']:
+        return buscar_arvore(no['esq'], chave)
+    else:
+        return buscar_arvore(no['drt'], chave)
 
 def gerar_id(nome):
     soma = 0
@@ -107,6 +174,10 @@ def cadastrar_ocorrencia():
 
     inserir_hash(hash_nome, nome, ocorrencias[-1])
     inserir_hash(hash_tipo, tipo, ocorrencias[-1])
+    inserir_heap(ocorrencia)
+
+    global raiz
+    raiz = inserir_arvore(raiz, id_ocorrencia, ocorrencia)
 
     print("Ocorrência salva com sucesso.")
 
@@ -130,9 +201,24 @@ def listar_historico_atendimentos():
     print(tabulate(historico_atendimentos, headers="keys", tablefmt="grid"))
 
 def buscar_ocorrencia():
-    print("\nBUSCAR OCORRÊNCIA")
-    id_busca = input("Digite o ID para buscar: ")
-    print("Buscando ocorrência com ID:", id_busca)
+    print("\nBUSCAR OCORRÊNCIA POR ID")
+    id_busca = input("Digite o ID para buscar: ").strip().upper()
+    resultado = buscar_arvore(raiz, id_busca)
+    if resultado:
+        print("\nOcorrência encontrada:")
+        print(tabulate([resultado], headers="keys", tablefmt="grid"))
+    else:
+        print("Ocorrência não encontrada.")
+
+def atender_prioridade():
+    resultado = extrair_max()
+    if resultado is None:
+        print("\nNenhuma ocorrência para atender.")
+        return
+    print("\nAtendendo ocorrência crítica:")
+    print("ID:", resultado['id_ocorrencia'], "|", resultado['nome'], "|", resultado['tipo'], "| Prioridade:", resultado['prioridade'])
+    atendimentos.append(resultado)
+    historico_atendimentos.append(resultado)
 
 def busca_nome_tipo():
     print("\nBUSCAR POR NOME OU TIPO")
@@ -162,7 +248,8 @@ while True:
     print("1 - Cadastrar ocorrência")
     print("2 - Listar ocorrências")
     print("3 - Atender próxima ocorrência pela fila")
-    print("5 - Buscar ocorrência")
+    print("4 - Atender por prioridade")
+    print("5 - Buscar ocorrência por ID")
     print("6 - Buscar por nome ou tipo")
     print("8 - Ver histórico de ações")
     print("0 - Sair")
@@ -175,6 +262,8 @@ while True:
         listar_ocorrencias()
     elif opcao == "3":
         atender_ocorrencia_fila()
+    elif opcao == "4":
+        atender_prioridade()
     elif opcao == "5":
         buscar_ocorrencia()
     elif opcao == "6":
