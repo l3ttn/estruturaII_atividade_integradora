@@ -1,7 +1,9 @@
 from tabulate import tabulate
 from collections import deque
+from datetime import datetime
 
 ocorrencias = deque()
+fila_atendimento = deque()
 atendimentos = []
 historico_ocorrencias = []
 historico_atendimentos = []
@@ -32,8 +34,9 @@ def gerencia_historico_acoes():
             print("Opção inválida.")
 
 def atender_ocorrencia_fila():
-    resultado = ocorrencias.popleft()
+    resultado = fila_atendimento.popleft()
     historico_atendimentos.append(resultado)
+    resultado["status"] = "Fechado"
     print(resultado)
 
 def desfazer_ultima_acao(pilha):
@@ -155,29 +158,32 @@ def cadastrar_ocorrencia():
     tipo = input("Tipo da ocorrência: ")
     descricao = input("Descrição: ")
     prioridade = input("Prioridade de 1 a 5: ")
-
+    data = datetime.now()
     print("\nOcorrência cadastrada!")
     print("ID:", id_ocorrencia)
     print("Nome:", nome)
     print("Tipo:", tipo)
     print("Descrição:", descricao)
     print("Prioridade:", prioridade)
-    ocorrencia = {
+    nova_ocorrencia = {
         'id_ocorrencia': id_ocorrencia,
         'nome': nome,
         'tipo': tipo,
         'descricao': descricao,
-        'prioridade': prioridade
+        'prioridade': prioridade,
+        'status': "Aberto",
+        'data': data
     }
-    ocorrencias.append(ocorrencia)
-    historico_ocorrencias.append(ocorrencia)
+    ocorrencias.append(nova_ocorrencia)
+    fila_atendimento.append(nova_ocorrencia)
+    historico_ocorrencias.append(nova_ocorrencia)
 
     inserir_hash(hash_nome, nome, ocorrencias[-1])
     inserir_hash(hash_tipo, tipo, ocorrencias[-1])
-    inserir_heap(ocorrencia)
+    inserir_heap(nova_ocorrencia)
 
     global raiz
-    raiz = inserir_arvore(raiz, id_ocorrencia, ocorrencia)
+    raiz = inserir_arvore(raiz, id_ocorrencia, nova_ocorrencia)
 
     print("Ocorrência salva com sucesso.")
 
@@ -216,7 +222,8 @@ def atender_prioridade():
         print("\nNenhuma ocorrência para atender.")
         return
     print("\nAtendendo ocorrência crítica:")
-    print("ID:", resultado['id_ocorrencia'], "|", resultado['nome'], "|", resultado['tipo'], "| Prioridade:", resultado['prioridade'])
+    resultado["status"] = "Fechado"
+    print("ID:", resultado['id_ocorrencia'], "|", resultado['nome'], "|", resultado['tipo'], "| Prioridade:", resultado['prioridade'], resultado['status'])
     atendimentos.append(resultado)
     historico_atendimentos.append(resultado)
 
@@ -270,6 +277,45 @@ def ordena_ocorrencias():
             for j in range(0, n-i-1):
                 if ocorrencias[j][busca] > ocorrencias[j+1][busca]:
                     ocorrencias[j][busca], ocorrencias[j+1][busca] = ocorrencias[j+1][busca], ocorrencias[j][busca]
+
+## Remover, dados temporarios
+def popular_db():
+    global raiz
+    dados = [
+        ("Maria Silva",      "Iluminação",   "Poste apagado na Rua Andrade Neves",          "3"),
+        ("João Pereira",     "Buraco",       "Buraco grande na Av. Bento Gonçalves",        "4"),
+        ("Ana Souza",        "Lixo",         "Acúmulo de lixo na esquina do mercado",       "2"),
+        ("Carlos Oliveira",  "Vazamento",    "Vazamento de água na calçada",                "5"),
+        ("Fernanda Lima",    "Iluminação",   "Lâmpada queimada na praça central",           "1"),
+        ("Roberto Alves",    "Sinalização",  "Placa de pare derrubada no cruzamento",       "4"),
+        ("Patrícia Gomes",   "Buraco",       "Calçada quebrada em frente à escola",         "3"),
+        ("Lucas Martins",    "Vazamento",    "Esgoto a céu aberto na Rua XV",               "5"),
+        ("Juliana Costa",    "Lixo",         "Entulho abandonado no terreno baldio",        "2"),
+        ("Eduardo Rocha",    "Sinalização",  "Semáforo com defeito na Praça da Bandeira",   "5"),
+    ]
+
+    for nome, tipo, descricao, prioridade in dados:
+        id_ocorrencia = gerar_id(nome)
+        ocorrencia = {
+            'id_ocorrencia': id_ocorrencia,
+            'nome': nome,
+            'tipo': tipo,
+            'descricao': descricao,
+            'prioridade': prioridade,
+            'status': "Aberto",
+            'data': datetime.now()
+        }
+        ocorrencias.append(ocorrencia)
+        fila_atendimento.append(ocorrencia)
+        historico_ocorrencias.append(ocorrencia)
+        inserir_hash(hash_nome, nome, ocorrencias[-1])
+        inserir_hash(hash_tipo, tipo, ocorrencias[-1])
+        inserir_heap(ocorrencia)
+        raiz = inserir_arvore(raiz, id_ocorrencia, ocorrencia)
+
+## Remover chamada dados temporarios
+popular_db()
+
 
 while True:
     print("\n===== MENU =====")
