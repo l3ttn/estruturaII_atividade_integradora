@@ -5,29 +5,22 @@ from datetime import datetime
 ocorrencias = deque()
 fila_atendimento = deque()
 atendimentos = []
-historico_ocorrencias = []
-historico_atendimentos = []
 historico_acoes = []
+backup_ultima_acao = [(0, 0)]
 
 def gerencia_historico_acoes():
     while True:
         print("\n===== HISTÓRICO DE AÇÕES =====")
-        print("1 - Listar ocorrências")
-        print("2 - Listar atendimentos")
-        print("3 - Desfazer última ocorrência")
-        print("4 - Desfazer último atendimento")
-        print("0 - Sair")
+        print("1 - Listar Histórico de ações")
+        print("2 - Desfazer última ação")
+        print("0 - Voltar")
 
         opcao = input("Escolha uma opção: ")
 
         if opcao == "1":
-            listar_historico_ocorrencias()
+            listar_historico_acoes()
         elif opcao == "2":
-            listar_historico_atendimentos()
-        elif opcao == "3":
-            desfazer_ultima_acao(historico_ocorrencias)
-        elif opcao == "4":
-            desfazer_ultima_acao(historico_atendimentos)    
+            desfazer_ultima_acao()
         elif opcao == "0":
             print("Saindooooo...")
             break
@@ -35,6 +28,7 @@ def gerencia_historico_acoes():
             print("Opção inválida.")
 
 def registrar_acao(dados, tipo):
+    ## Dicionário Tipos
     ## 0 - Cadastrar Ocorrência
     ## 1 - Atendimento por ordem de chegada
     ## 2 - Atendimento por prioridade
@@ -42,43 +36,73 @@ def registrar_acao(dados, tipo):
     if tipo == 0:
         historico_acoes.append({
             'id': dados["id_ocorrencia"],
-            'acao': "Cadastro"
+            'acao': "Cadastro",
+            'tipo': tipo
         })
         return
     if tipo == 1:
         historico_acoes.append({
         'id': dados["id_ocorrencia"],
-        'acao': "Atendimento Básico"
+        'acao': "Atendimento Básico",
+        'tipo': tipo
         })
         return
     if tipo == 2:
         historico_acoes.append({
         'id': dados["id_ocorrencia"],
-        'acao': "Atendimento Prioritário"
+        'acao': "Atendimento Prioritário",
+        'tipo': tipo
         })
         return
     if tipo == 3:
         historico_acoes.append({
         'id': dados["id_ocorrencia"],
-        'acao': "Ação desfeita"
+        'acao': "Ação desfeita",
+        'tipo': tipo
         })
         return
 
+def desfazer_ultima_acao():
+    ## Dicionário Tipos
+    ## 0 - Cadastrar Ocorrência
+    ## 1 - Atendimento por ordem de chegada
+    ## 2 - Atendimento por prioridade
+    acao = historico_acoes.pop()
+    tipo = acao["tipo"]
+    print(acao)
+    if not historico_acoes:
+        print("Histórico vazio")
+    ultima_acao, ultimo_tipo = backup_ultima_acao.pop()
+    if tipo == 0:
+        ocorrencia = ocorrencias.pop()
+        backup_ultima_acao.append((ocorrencia, tipo))
+        registrar_acao(ocorrencia, 3)
+    if tipo == 1:
+        ocorrencia = ocorrencias[0]
+        ocorrencia["status"] = "Aberto"
+        fila_atendimento.appendleft(ocorrencia)
+        backup_ultima_acao.append((ocorrencia, tipo))
+        registrar_acao(ocorrencia, 3)
+    if tipo == 2:
+        return
+    if tipo == 3:
+       if ultimo_tipo == 0:
+           ocorrencias.append(ultima_acao)
+           backup_ultima_acao.append((ultima_acao, ultimo_tipo))
+           registrar_acao(ultima_acao, ultimo_tipo)
+           return
+       if ultimo_tipo == 1:
+            ocorrencia = ocorrencias[0]
+            ocorrencia["status"] = "Fechado"
+            fila_atendimento.popleft()
+            backup_ultima_acao.append((ultima_acao, ultimo_tipo))
+            registrar_acao(ultima_acao, ultimo_tipo)      
 
 def atender_ocorrencia_fila():
     resultado = fila_atendimento.popleft()
-    historico_atendimentos.append(resultado)
     resultado["status"] = "Fechado"
     registrar_acao(resultado, 1)
     print(resultado)
-
-def desfazer_ultima_acao():
-    if historico_acoes:
-        print(historico_acoes[-1])
-    else:
-        print("Histórico vazio")
-        return
-
 
 hash_nome = []
 hash_tipo = []
@@ -207,7 +231,6 @@ def cadastrar_ocorrencia():
     }
     ocorrencias.append(nova_ocorrencia)
     fila_atendimento.append(nova_ocorrencia)
-    historico_ocorrencias.append(nova_ocorrencia)
     registrar_acao(nova_ocorrencia, 0)
 
     inserir_hash(hash_nome, nome, ocorrencias[-1])
@@ -219,6 +242,9 @@ def cadastrar_ocorrencia():
 
     print("Ocorrência salva com sucesso.")
 
+def listar_historico_acoes():
+    print(tabulate(historico_acoes, headers="keys", tablefmt="grid"))
+
 
 def listar_atendimentos():
     print("\nLISTAR ATENDIMENTOS")
@@ -229,14 +255,6 @@ def listar_ocorrencias():
     print("\nLISTAR OCORRÊNCIAS")
     print("Aqui serão listadas as ocorrências cadastradas.")
     print(tabulate(ocorrencias, headers="keys", tablefmt="grid"))
-
-def listar_historico_ocorrencias():  
-    print("\nHISTÓRICO OCORRÊNCIAS")
-    print(tabulate(historico_ocorrencias, headers="keys", tablefmt="grid"))
-
-def listar_historico_atendimentos():
-    print("\nHISTÓRICO ATENDIMENTOS")
-    print(tabulate(historico_atendimentos, headers="keys", tablefmt="grid"))
 
 def buscar_ocorrencia():
     print("\nBUSCAR OCORRÊNCIA POR ID")
@@ -257,7 +275,6 @@ def atender_prioridade():
     resultado["status"] = "Fechado"
     print("ID:", resultado['id_ocorrencia'], "|", resultado['nome'], "|", resultado['tipo'], "| Prioridade:", resultado['prioridade'], resultado['status'])
     atendimentos.append(resultado)
-    historico_atendimentos.append(resultado)
     registrar_acao(resultado, 2)
 
 def busca_nome_tipo():
@@ -340,10 +357,10 @@ def popular_db():
         }
         ocorrencias.append(ocorrencia)
         fila_atendimento.append(ocorrencia)
-        historico_ocorrencias.append(ocorrencia)
         inserir_hash(hash_nome, nome, ocorrencias[-1])
         inserir_hash(hash_tipo, tipo, ocorrencias[-1])
         inserir_heap(ocorrencia)
+        registrar_acao(ocorrencia, 0)
         raiz = inserir_arvore(raiz, id_ocorrencia, ocorrencia)
 
 ## Remover chamada dados temporarios
