@@ -29,38 +29,17 @@ def gerencia_historico_acoes():
 
 def registrar_acao(dados, tipo):
     ## Dicionário Tipos
-    ## 0 - Cadastrar Ocorrência
-    ## 1 - Atendimento por ordem de chegada
-    ## 2 - Atendimento por prioridade
-    ## 3 - Desfazer última ação
-    if tipo == 0:
-        historico_acoes.append({
-            'id': dados["id_ocorrencia"],
-            'acao': "Cadastro",
-            'tipo': tipo
-        })
-        return
-    if tipo == 1:
-        historico_acoes.append({
-        'id': dados["id_ocorrencia"],
-        'acao': "Atendimento Básico",
-        'tipo': tipo
-        })
-        return
-    if tipo == 2:
-        historico_acoes.append({
-        'id': dados["id_ocorrencia"],
-        'acao': "Atendimento Prioritário",
-        'tipo': tipo
-        })
-        return
-    if tipo == 3:
-        historico_acoes.append({
-        'id': dados["id_ocorrencia"],
-        'acao': "Ação desfeita",
-        'tipo': tipo
-        })
-        return
+    acoes = {
+        0: "Cadastro",
+        1: "Atendimento Básico",
+        2: "Atendimento Prioritário",
+        3: "Ação desfeita"
+    }
+    historico_acoes.append({
+    'id': dados["id_ocorrencia"],
+    'acao': acoes[tipo],
+    'tipo': tipo
+    })
 
 def desfazer_ultima_acao():
     ## Dicionário Tipos
@@ -299,7 +278,7 @@ def busca_nome_tipo():
     else:
         print("Nenhuma ocorrência encontrada.")
 
-def ordena_ocorrencias():
+def menu_ordena_ocorrencias():
     print("\nOrdenar Por:")
     print("1 - ID")
     print("2 - Prioridade")
@@ -314,8 +293,12 @@ def ordena_ocorrencias():
     elif opcao == "3":
         busca = 'nome'
     elif opcao == "0":
+        print("Opção inválida")
         return
+    return busca
 
+def ordena_ocorrencias():
+    busca = menu_ordena_ocorrencias()
     n = len(ocorrencias)
     if busca == 'prioridade':
         for i in range(n):
