@@ -46,11 +46,10 @@ def desfazer_ultima_acao():
     ## 0 - Cadastrar Ocorrência
     ## 1 - Atendimento por ordem de chegada
     ## 2 - Atendimento por prioridade
+    if not historico_acoes:
+       return print("Histórico vazio")
     acao = historico_acoes.pop()
     tipo = acao["tipo"]
-    print(acao)
-    if not historico_acoes:
-        print("Histórico vazio")
     ultima_acao, ultimo_tipo = backup_ultima_acao.pop()
     if tipo == 0:
         ocorrencia = ocorrencias.pop()
@@ -279,37 +278,40 @@ def busca_nome_tipo():
         print("Nenhuma ocorrência encontrada.")
 
 def menu_ordena_ocorrencias():
-    print("\nOrdenar Por:")
-    print("1 - ID")
-    print("2 - Prioridade")
-    print("3 - Nome")
-    print("0 - Voltar")
-    opcao = input("Escolha uma opção: ")
-    busca = ''
-    if opcao == "1":
-        busca = 'id_ocorrencia'
-    elif opcao == "2":
-        busca = 'prioridade'
-    elif opcao == "3":
-        busca = 'nome'
-    elif opcao == "0":
-        print("Opção inválida")
-        return
-    return busca
+    while True:
+        print("\nOrdenar Por:")
+        print("1 - ID")
+        print("2 - Prioridade")
+        print("3 - Nome")
+        print("0 - Voltar")
+        opcao = input("Escolha uma opção: ")
+        busca = ''
+        if opcao == "1":
+            busca = 'id_ocorrencia'
+        elif opcao == "2":
+            busca = 'prioridade'
+        elif opcao == "3":
+            busca = 'nome'
+        elif opcao == "0":
+            return
+        else:
+            print("Opção inválida")
+            continue
+        return ordena_ocorrencias(busca)
 
-def ordena_ocorrencias():
-    busca = menu_ordena_ocorrencias()
+def ordena_ocorrencias(parametro):
     n = len(ocorrencias)
-    if busca == 'prioridade':
+    if parametro == 'prioridade':
         for i in range(n):
             for j in range(0, n-i-1):
-                if ocorrencias[j][busca] < ocorrencias[j+1][busca]:
-                    ocorrencias[j][busca], ocorrencias[j+1][busca] = ocorrencias[j+1][busca], ocorrencias[j][busca]
+                if ocorrencias[j][parametro] < ocorrencias[j+1][parametro]:
+                    ocorrencias[j], ocorrencias[j+1] = ocorrencias[j+1], ocorrencias[j]
     else:
         for i in range(n):
             for j in range(0, n-i-1):
-                if ocorrencias[j][busca] > ocorrencias[j+1][busca]:
-                    ocorrencias[j][busca], ocorrencias[j+1][busca] = ocorrencias[j+1][busca], ocorrencias[j][busca]
+                if ocorrencias[j][parametro] > ocorrencias[j+1][parametro]:
+                    ocorrencias[j], ocorrencias[j+1] = ocorrencias[j+1], ocorrencias[j]
+    return listar_ocorrencias()
 
 ## Remover, dados temporarios
 def popular_db():
@@ -334,7 +336,7 @@ def popular_db():
             'nome': nome,
             'tipo': tipo,
             'descricao': descricao,
-            'prioridade': prioridade,
+            'prioridade': int(prioridade),
             'status': "Aberto",
             'data': datetime.now()
         }
@@ -377,7 +379,7 @@ while True:
     elif opcao == "6":
         busca_nome_tipo()
     elif opcao == "7":
-        ordena_ocorrencias()
+        menu_ordena_ocorrencias()
     elif opcao == "8":
         gerencia_historico_acoes()
     elif opcao == "9":
