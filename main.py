@@ -4,7 +4,6 @@ from datetime import datetime
 
 ocorrencias = deque()
 fila_atendimento = deque()
-atendimentos = []
 historico_acoes = []
 backup_ultima_acao = [(0, 0)]
 
@@ -223,12 +222,6 @@ def cadastrar_ocorrencia():
 def listar_historico_acoes():
     print(tabulate(historico_acoes, headers="keys", tablefmt="grid"))
 
-
-def listar_atendimentos():
-    print("\nLISTAR ATENDIMENTOS")
-    print("Aqui serão listados os atendimentos.")
-    print(tabulate(atendimentos, headers="keys", tablefmt="grid"))
-
 def listar_ocorrencias():  
     print("\nLISTAR OCORRÊNCIAS")
     print("Aqui serão listadas as ocorrências cadastradas.")
@@ -252,7 +245,6 @@ def atender_prioridade():
     print("\nAtendendo ocorrência crítica:")
     resultado["status"] = "Fechado"
     print("ID:", resultado['id_ocorrencia'], "|", resultado['nome'], "|", resultado['tipo'], "| Prioridade:", resultado['prioridade'], resultado['status'])
-    atendimentos.append(resultado)
     registrar_acao(resultado, 2)
 
 def busca_nome_tipo():
