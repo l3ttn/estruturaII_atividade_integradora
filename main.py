@@ -1,50 +1,68 @@
 from tabulate import tabulate
 from collections import deque
+from datetime import datetime
 
 ocorrencias = deque()
-atendimentos = []
-historico_ocorrencias = []
-historico_atendimentos = []
+fila_atendimento = deque()
+historico_acoes = []
 
 def gerencia_historico_acoes():
     while True:
         print("\n===== HISTÓRICO DE AÇÕES =====")
-        print("1 - Listar ocorrências")
-        print("2 - Listar atendimentos")
-        print("3 - Desfazer última ocorrência")
-        print("4 - Desfazer último atendimento")
-        print("0 - Sair")
+        print("1 - Listar Histórico de ações")
+        print("2 - Desfazer última ação")
+        print("0 - Voltar")
 
         opcao = input("Escolha uma opção: ")
 
         if opcao == "1":
-            listar_historico_ocorrencias()
+            listar_historico_acoes()
         elif opcao == "2":
-            listar_historico_atendimentos()
-        elif opcao == "3":
-            desfazer_ultima_acao(historico_ocorrencias)
-        elif opcao == "4":
-            desfazer_ultima_acao(historico_atendimentos)    
+            desfazer_ultima_acao()
         elif opcao == "0":
             print("Saindooooo...")
             break
         else:
             print("Opção inválida.")
 
+def registrar_acao(dados, tipo):
+    ## Dicionário Tipos
+    acoes = {
+        0: "Cadastro",
+        1: "Atendimento Básico",
+        2: "Atendimento Prioritário",
+    }
+    historico_acoes.append({
+    'id': dados["id_ocorrencia"],
+    'acao': acoes[tipo],
+    'tipo': tipo
+    })
+
+def desfazer_ultima_acao():
+    ## Dicionário Tipos
+    ## 0 - Cadastrar Ocorrência
+    ## 1 - Atendimento por ordem de chegada
+    ## 2 - Atendimento por prioridade
+    if not historico_acoes:
+       return print("Histórico vazio")
+    acao = historico_acoes.pop()
+    tipo = acao["tipo"]
+    if tipo == 0:
+        ocorrencias.pop()
+    elif tipo == 1:
+        ocorrencia = buscar_arvore(raiz, acao["id"])
+        ocorrencia["status"] = "Aberto"
+        fila_atendimento.appendleft(ocorrencia)
+    elif tipo == 2:
+        ocorrencia = buscar_arvore(raiz, acao["id"])
+        ocorrencia["status"] = "Aberto"
+        inserir_heap(ocorrencia)
+
 def atender_ocorrencia_fila():
-    resultado = ocorrencias.popleft()
-    historico_atendimentos.append(resultado)
+    resultado = fila_atendimento.popleft()
+    resultado["status"] = "Fechado"
+    registrar_acao(resultado, 1)
     print(resultado)
-
-def desfazer_ultima_acao(pilha):
-    if pilha:
-        resultado = pilha.pop()
-        print(tabulate(ocorrencias, headers="keys", tablefmt="grid"))
-        print(f"Ocorrência apagada:\n {tabulate([resultado], headers="keys", tablefmt="grid")}")
-    else:
-        print("Histórico vazio")
-        return
-
 
 hash_nome = []
 hash_tipo = []
@@ -155,50 +173,42 @@ def cadastrar_ocorrencia():
     tipo = input("Tipo da ocorrência: ")
     descricao = input("Descrição: ")
     prioridade = input("Prioridade de 1 a 5: ")
-
+    data = datetime.now()
     print("\nOcorrência cadastrada!")
     print("ID:", id_ocorrencia)
     print("Nome:", nome)
     print("Tipo:", tipo)
     print("Descrição:", descricao)
     print("Prioridade:", prioridade)
-    ocorrencia = {
+    nova_ocorrencia = {
         'id_ocorrencia': id_ocorrencia,
         'nome': nome,
         'tipo': tipo,
         'descricao': descricao,
-        'prioridade': prioridade
+        'prioridade': int(prioridade),
+        'status': "Aberto",
+        'data': data
     }
-    ocorrencias.append(ocorrencia)
-    historico_ocorrencias.append(ocorrencia)
+    ocorrencias.append(nova_ocorrencia)
+    fila_atendimento.append(nova_ocorrencia)
+    registrar_acao(nova_ocorrencia, 0)
 
     inserir_hash(hash_nome, nome, ocorrencias[-1])
     inserir_hash(hash_tipo, tipo, ocorrencias[-1])
-    inserir_heap(ocorrencia)
+    inserir_heap(nova_ocorrencia)
 
     global raiz
-    raiz = inserir_arvore(raiz, id_ocorrencia, ocorrencia)
+    raiz = inserir_arvore(raiz, id_ocorrencia, nova_ocorrencia)
 
     print("Ocorrência salva com sucesso.")
 
-
-def listar_atendimentos():
-    print("\nLISTAR ATENDIMENTOS")
-    print("Aqui serão listados os atendimentos.")
-    print(tabulate(atendimentos, headers="keys", tablefmt="grid"))
+def listar_historico_acoes():
+    print(tabulate(historico_acoes, headers="keys", tablefmt="grid"))
 
 def listar_ocorrencias():  
     print("\nLISTAR OCORRÊNCIAS")
     print("Aqui serão listadas as ocorrências cadastradas.")
     print(tabulate(ocorrencias, headers="keys", tablefmt="grid"))
-
-def listar_historico_ocorrencias():  
-    print("\nHISTÓRICO OCORRÊNCIAS")
-    print(tabulate(historico_ocorrencias, headers="keys", tablefmt="grid"))
-
-def listar_historico_atendimentos():
-    print("\nHISTÓRICO ATENDIMENTOS")
-    print(tabulate(historico_atendimentos, headers="keys", tablefmt="grid"))
 
 def buscar_ocorrencia():
     print("\nBUSCAR OCORRÊNCIA POR ID")
@@ -216,9 +226,9 @@ def atender_prioridade():
         print("\nNenhuma ocorrência para atender.")
         return
     print("\nAtendendo ocorrência crítica:")
-    print("ID:", resultado['id_ocorrencia'], "|", resultado['nome'], "|", resultado['tipo'], "| Prioridade:", resultado['prioridade'])
-    atendimentos.append(resultado)
-    historico_atendimentos.append(resultado)
+    resultado["status"] = "Fechado"
+    print("ID:", resultado['id_ocorrencia'], "|", resultado['nome'], "|", resultado['tipo'], "| Prioridade:", resultado['prioridade'], resultado['status'])
+    registrar_acao(resultado, 2)
 
 def busca_nome_tipo():
     print("\nBUSCAR POR NOME OU TIPO")
@@ -242,34 +252,41 @@ def busca_nome_tipo():
     else:
         print("Nenhuma ocorrência encontrada.")
 
-def ordena_ocorrencias():
-    print("\nOrdenar Por:")
-    print("1 - ID")
-    print("2 - Prioridade")
-    print("3 - Nome")
-    print("0 - Voltar")
-    opcao = input("Escolha uma opção: ")
-    busca = ''
-    if opcao == "1":
-        busca = 'id_ocorrencia'
-    elif opcao == "2":
-        busca = 'prioridade'
-    elif opcao == "3":
-        busca = 'nome'
-    elif opcao == "0":
-        return
+def menu_ordena_ocorrencias():
+    while True:
+        print("\nOrdenar Por:")
+        print("1 - ID")
+        print("2 - Prioridade")
+        print("3 - Nome")
+        print("0 - Voltar")
+        opcao = input("Escolha uma opção: ")
+        busca = ''
+        if opcao == "1":
+            busca = 'id_ocorrencia'
+        elif opcao == "2":
+            busca = 'prioridade'
+        elif opcao == "3":
+            busca = 'nome'
+        elif opcao == "0":
+            return
+        else:
+            print("Opção inválida")
+            continue
+        return ordena_ocorrencias(busca)
 
+def ordena_ocorrencias(parametro):
     n = len(ocorrencias)
-    if busca == 'prioridade':
+    if parametro == 'prioridade':
         for i in range(n):
             for j in range(0, n-i-1):
-                if ocorrencias[j][busca] < ocorrencias[j+1][busca]:
-                    ocorrencias[j][busca], ocorrencias[j+1][busca] = ocorrencias[j+1][busca], ocorrencias[j][busca]
+                if ocorrencias[j][parametro] < ocorrencias[j+1][parametro]:
+                    ocorrencias[j], ocorrencias[j+1] = ocorrencias[j+1], ocorrencias[j]
     else:
         for i in range(n):
             for j in range(0, n-i-1):
-                if ocorrencias[j][busca] > ocorrencias[j+1][busca]:
-                    ocorrencias[j][busca], ocorrencias[j+1][busca] = ocorrencias[j+1][busca], ocorrencias[j][busca]
+                if ocorrencias[j][parametro] > ocorrencias[j+1][parametro]:
+                    ocorrencias[j], ocorrencias[j+1] = ocorrencias[j+1], ocorrencias[j]
+    return listar_ocorrencias()
 
 while True:
     print("\n===== MENU =====")
@@ -298,9 +315,11 @@ while True:
     elif opcao == "6":
         busca_nome_tipo()
     elif opcao == "7":
-        ordena_ocorrencias()
+        menu_ordena_ocorrencias()
     elif opcao == "8":
         gerencia_historico_acoes()
+    elif opcao == "9":
+        desfazer_ultima_acao()
     elif opcao == "0":
         print("Saindo...")
         break
