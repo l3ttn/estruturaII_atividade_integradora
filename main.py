@@ -5,7 +5,6 @@ from datetime import datetime
 ocorrencias = deque()
 fila_atendimento = deque()
 historico_acoes = []
-backup_ultima_acao = [(0, 0)]
 
 def gerencia_historico_acoes():
     while True:
@@ -32,7 +31,6 @@ def registrar_acao(dados, tipo):
         0: "Cadastro",
         1: "Atendimento Básico",
         2: "Atendimento Prioritário",
-        3: "Ação desfeita"
     }
     historico_acoes.append({
     'id': dados["id_ocorrencia"],
@@ -49,31 +47,16 @@ def desfazer_ultima_acao():
        return print("Histórico vazio")
     acao = historico_acoes.pop()
     tipo = acao["tipo"]
-    ultima_acao, ultimo_tipo = backup_ultima_acao.pop()
     if tipo == 0:
-        ocorrencia = ocorrencias.pop()
-        backup_ultima_acao.append((ocorrencia, tipo))
-        registrar_acao(ocorrencia, 3)
-    if tipo == 1:
-        ocorrencia = ocorrencias[0]
+        ocorrencias.pop()
+    elif tipo == 1:
+        ocorrencia = buscar_arvore(raiz, acao["id"])
         ocorrencia["status"] = "Aberto"
         fila_atendimento.appendleft(ocorrencia)
-        backup_ultima_acao.append((ocorrencia, tipo))
-        registrar_acao(ocorrencia, 3)
-    if tipo == 2:
-        return
-    if tipo == 3:
-       if ultimo_tipo == 0:
-           ocorrencias.append(ultima_acao)
-           backup_ultima_acao.append((ultima_acao, ultimo_tipo))
-           registrar_acao(ultima_acao, ultimo_tipo)
-           return
-       if ultimo_tipo == 1:
-            ocorrencia = ocorrencias[0]
-            ocorrencia["status"] = "Fechado"
-            fila_atendimento.popleft()
-            backup_ultima_acao.append((ultima_acao, ultimo_tipo))
-            registrar_acao(ultima_acao, ultimo_tipo)      
+    elif tipo == 2:
+        ocorrencia = buscar_arvore(raiz, acao["id"])
+        ocorrencia["status"] = "Aberto"
+        inserir_heap(ocorrencia)
 
 def atender_ocorrencia_fila():
     resultado = fila_atendimento.popleft()
@@ -202,7 +185,7 @@ def cadastrar_ocorrencia():
         'nome': nome,
         'tipo': tipo,
         'descricao': descricao,
-        'prioridade': prioridade,
+        'prioridade': int(prioridade),
         'status': "Aberto",
         'data': data
     }
@@ -304,45 +287,6 @@ def ordena_ocorrencias(parametro):
                 if ocorrencias[j][parametro] > ocorrencias[j+1][parametro]:
                     ocorrencias[j], ocorrencias[j+1] = ocorrencias[j+1], ocorrencias[j]
     return listar_ocorrencias()
-
-## Remover, dados temporarios
-def popular_db():
-    global raiz
-    dados = [
-        ("Maria Silva",      "Iluminação",   "Poste apagado na Rua Andrade Neves",          "3"),
-        ("João Pereira",     "Buraco",       "Buraco grande na Av. Bento Gonçalves",        "4"),
-        ("Ana Souza",        "Lixo",         "Acúmulo de lixo na esquina do mercado",       "2"),
-        ("Carlos Oliveira",  "Vazamento",    "Vazamento de água na calçada",                "5"),
-        ("Fernanda Lima",    "Iluminação",   "Lâmpada queimada na praça central",           "1"),
-        ("Roberto Alves",    "Sinalização",  "Placa de pare derrubada no cruzamento",       "4"),
-        ("Patrícia Gomes",   "Buraco",       "Calçada quebrada em frente à escola",         "3"),
-        ("Lucas Martins",    "Vazamento",    "Esgoto a céu aberto na Rua XV",               "5"),
-        ("Juliana Costa",    "Lixo",         "Entulho abandonado no terreno baldio",        "2"),
-        ("Eduardo Rocha",    "Sinalização",  "Semáforo com defeito na Praça da Bandeira",   "5"),
-    ]
-
-    for nome, tipo, descricao, prioridade in dados:
-        id_ocorrencia = gerar_id(nome)
-        ocorrencia = {
-            'id_ocorrencia': id_ocorrencia,
-            'nome': nome,
-            'tipo': tipo,
-            'descricao': descricao,
-            'prioridade': int(prioridade),
-            'status': "Aberto",
-            'data': datetime.now()
-        }
-        ocorrencias.append(ocorrencia)
-        fila_atendimento.append(ocorrencia)
-        inserir_hash(hash_nome, nome, ocorrencias[-1])
-        inserir_hash(hash_tipo, tipo, ocorrencias[-1])
-        inserir_heap(ocorrencia)
-        registrar_acao(ocorrencia, 0)
-        raiz = inserir_arvore(raiz, id_ocorrencia, ocorrencia)
-
-## Remover chamada dados temporarios
-popular_db()
-
 
 while True:
     print("\n===== MENU =====")
